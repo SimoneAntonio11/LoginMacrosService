@@ -1,5 +1,7 @@
 package it.macros.app.controllers;
 
+import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,17 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import it.macros.app.controllers.beans.Esito;
 import it.macros.app.controllers.beans.requests.LoginRequest;
+import it.macros.app.controllers.beans.requests.RegisterRequest;
 import it.macros.app.controllers.beans.requests.UtenteRequest;
 import it.macros.app.controllers.beans.responses.GenericResponse;
 import it.macros.app.controllers.beans.responses.ProfiloResponse;
 import it.macros.app.controllers.beans.responses.UtenteResponse;
 import it.macros.app.controllers.constants.ControllerMaps;
+import it.macros.app.repositories.ProfiloRepository;
 import it.macros.app.repositories.entities.Profilo;
+import it.macros.app.repositories.entities.Ruolo;
 import it.macros.app.repositories.entities.Utente;
 import it.macros.app.services.LoginService;
+import it.macros.app.services.UtenteService;
 import it.macros.app.services.exceptions.ServiceException;
 import it.macros.security.SecurityManager;
 import it.macros.security.services.exceptions.SecurityException;
+import it.macros.security.utils.UserUtil;
 
 
 @Slf4j
@@ -35,9 +42,18 @@ public class LoginController extends BaseController {
 
     @Autowired
     private SecurityManager securityManager;
+    
+    @Autowired
+	private UserUtil userUtil;
 
     @Autowired
     private LoginService loginService;
+    
+    @Autowired
+    private UtenteService utenteService;
+    
+    @Autowired
+    private ProfiloRepository profiloRepository;
 
 	/**
 	 * @param loginRequest
@@ -107,6 +123,46 @@ public class LoginController extends BaseController {
 
 		return httpEntity;
 	}
+	
+	
+	@RequestMapping(value = "/public/registrati", method = RequestMethod.POST, consumes = ControllerMaps.JSON)
+	public @ResponseBody HttpEntity<GenericResponse> registrati(@RequestBody RegisterRequest registerRequest, HttpServletResponse response) throws ServiceException {
+
+	    HttpEntity<GenericResponse> httpEntity;
+
+	    GenericResponse genericResponse = new GenericResponse();
+		
+		//Profilo profilo = new Profilo();
+
+	    try {
+	        log.info("START invocation registrati() of controller layer");
+	        /*
+	        Ruolo ruolo = new Ruolo(2);      
+	        Utente utente = utenteService.getUtente(userUtil.getCurrentUserName());
+	        
+	        profilo.setRuolo(ruolo);
+	        profilo.setUtente(utente);
+	        profilo.setDataInizio(new Date());
+	        profiloRepository.save(profilo);
+	         */
+	        securityManager.registrati(registerRequest.getUsername(), registerRequest.getEmail(), registerRequest.getPassword(), response);
+       
+	        genericResponse.setEsito(new Esito());
+			
+			//profiloResponse.setProfilo(profilo);
+			
+			httpEntity = new HttpEntity<GenericResponse>(genericResponse);
+
+	        log.info("END invocation registrati() of controller layer");
+
+	    } catch (SecurityException e) {
+	    	genericResponse.setEsito(new Esito(e.getCode(), e.getMessage(), null));
+	        httpEntity = new HttpEntity<>(genericResponse);
+	    }
+
+	    return httpEntity;
+	}
+
 
 	/*@RequestMapping(value = "public/ripristina-password", method = RequestMethod.POST, consumes = ControllerMaps.JSON)
 	public @ResponseBody HttpEntity<GenericResponse> ripristinaPassword(@RequestBody AnagraficaRequest anagraficaRequest) {

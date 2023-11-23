@@ -37,4 +37,10 @@ public class Ruolo {
 
 	private transient List<Ruolo> ruoli;
 
+	public Ruolo(Integer id) {
+		super();
+		this.id = id;
+	}
+
+	
 }
